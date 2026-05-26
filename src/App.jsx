@@ -287,10 +287,22 @@ export default function App() {
     async function fetchData() {
       const { data, error } = await supabase.from('actividades').select('*');
       if (error) {
-        console.error('Error al cargar:', error);
-      } else {
-        setCitas(data.filter(item => item.tipo === 'recuerdo'));
-        setPlanes(data.filter(item => item.tipo === 'futuro'));
+        console.error('Error al cargar datos desde Supabase:', error);
+      } else if (data) {
+        // Formateamos de forma estricta todo lo que viene de la DB a camelCase para React
+        const datosMapeados = data.map(item => ({
+          id: item.id,
+          fechaRaw: item.fecha_raw, // Mapeo crítico de snake_case a camelCase
+          plan: item.plan,
+          categoria: item.categoria,
+          highlight: item.highlight,
+          sentimiento: item.sentimiento,
+          emoji: item.emoji,
+          tipo: item.tipo
+        }));
+
+        setCitas(datosMapeados.filter(item => item.tipo === 'recuerdo'));
+        setPlanes(datosMapeados.filter(item => item.tipo === 'futuro'));
       }
     }
     fetchData();
@@ -319,6 +331,7 @@ export default function App() {
   async function submit() {
     if (!form.fechaRaw || !form.plan || !form.highlight) return;
 
+    // Estructura estricta para las columnas de Supabase
     const newItem = {
       fecha_raw: form.fechaRaw,
       plan: form.plan,
@@ -332,11 +345,43 @@ export default function App() {
     const { data, error } = await supabase.from('actividades').insert([newItem]).select();
 
     if (error) {
-      console.error("Error al guardar:", error);
+      console.error("Error al guardar en Supabase:", error);
     } else {
-      // Si fue exitoso, actualizamos el estado local con el ID que nos devolvió Supabase
-      if (tipoForm === "recuerdo") setCitas(p => [...p, ...data]);
-      else setPlanes(p => [...p, ...data]);
+      let itemParaEstado;
+
+      if (data && data.length > 0) {
+        // Si Supabase responde con el objeto, lo mapeamos inmediatamente a camelCase
+        itemParaEstado = {
+          id: data[0].id,
+          fechaRaw: data[0].fecha_raw,
+          plan: data[0].plan,
+          categoria: data[0].categoria,
+          highlight: data[0].highlight,
+          sentimiento: data[0].sentimiento,
+          emoji: data[0].emoji,
+          tipo: data[0].tipo
+        };
+      } else {
+        // Si por RLS 'data' viene vacío, usamos el estado del formulario con un ID temporal
+        itemParaEstado = {
+          id: Date.now(), 
+          fechaRaw: form.fechaRaw,
+          plan: form.plan,
+          categoria: form.categoria,
+          highlight: form.highlight,
+          sentimiento: form.sentimiento,
+          emoji: form.emoji,
+          tipo: tipoForm
+        };
+      }
+
+      // Inyectar al estado local de React de forma consistente
+      if (tipoForm === "recuerdo") {
+        setCitas(p => [...p, itemParaEstado]);
+      } else {
+        setPlanes(p => [...p, itemParaEstado]);
+      }
+      
       setForm(BLANK);
     }
   }
