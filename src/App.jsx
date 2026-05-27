@@ -285,7 +285,7 @@ export default function App() {
 
   useEffect(() => {
     async function fetchData() {
-      const { data, error } = await supabase.from('actividades').select('*');
+      const { data, error } = await supabase.from('actividades').select('*').order('fecha_raw', { ascending: true });
       if (error) {
         console.error('Error al cargar datos desde Supabase:', error);
       } else if (data) {
@@ -333,9 +333,11 @@ export default function App() {
   }, []);
 
   const citasF = useMemo(
-    () => filtro === "Todas" ? citas : citas.filter(c => c.categoria === filtro),
+    () => [...citas].filter(c => filtro === "Todas" || c.categoria === filtro)
+      .sort((a, b) => parsefecha(a.fechaRaw) - parsefecha(b.fechaRaw)),
     [citas, filtro]
   );
+  
   const planesF = useMemo(
     () => [...planes].filter(p => filtro === "Todas" || p.categoria === filtro)
       .sort((a, b) => parsefecha(a.fechaRaw) - parsefecha(b.fechaRaw)),
