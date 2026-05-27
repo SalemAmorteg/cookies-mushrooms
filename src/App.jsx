@@ -578,19 +578,19 @@ export default function App() {
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 16 }}>
                 {citasF.map(c => (
-                  <div key={c.id} className="ch" style={{ background: "#FDE047", border: "4px solid #000", position: "relative", overflow: "hidden" }}>
+                  <div key={c.id} className="ch" style={{ background: "#FDE047", border: "4px solid #000", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", height: "100%" }}>
                     <div style={{ background: "#000", color: "#FDE047", padding: "8px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span style={{ fontFamily: "'Bebas Neue'", fontSize: 12, letterSpacing: 0.5 }}>🍪 {fmt(c.fechaRaw)}</span>
                       <span style={{ fontSize: 9, letterSpacing: 2, textTransform: "uppercase", border: "1px solid #FDE047", padding: "2px 6px" }}>{CAT_IC[c.categoria]} {c.categoria}</span>
                     </div>
-                    <div style={{ padding: "14px 12px" }}>
+                    <div style={{ padding: "14px 12px", display: "flex", flexDirection: "column", flexGrow: 1 }}>
                       <div style={{ fontFamily: "'Bebas Neue'", fontSize: 22, color: "#000", lineHeight: 1.1, marginBottom: 10, letterSpacing: 1 }}>{c.plan}</div>
-                      <div style={{ fontSize: 11, color: "#000", lineHeight: 1.5, borderLeft: "3px solid #000", paddingLeft: 8, marginBottom: 10 }}>{c.highlight}</div>
+                      <div style={{ fontSize: 11, color: "#000", lineHeight: 1.5, borderLeft: "3px solid #000", paddingLeft: 8, marginBottom: 10, display: "flex", alignItems: "center", flexGrow: 1 }}>{c.highlight}</div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <span style={{ fontSize: 15 }}>{c.emoji}</span>
                         <span style={{ fontSize: 10, color: "#000", opacity: .90, fontStyle: "italic" }}>{c.sentimiento}</span>
                       </div>
-                      <CardActions dark onEdit={() => setEditItem(c)} onDelete={() => setDeleteItem(c)} />
+                      <div style={{ marginTop: "auto" }}><CardActions dark onEdit={() => setEditItem(c)} onDelete={() => setDeleteItem(c)} /></div>
                     </div>
                     <div style={{ position: "absolute", bottom: -8, right: -4, fontSize: 52, opacity: .06, pointerEvents: "none" }}>🍪</div>
                   </div>
@@ -649,14 +649,14 @@ export default function App() {
                 {planesF.map(p => {
                   const dias = diasRestantes(p.fechaRaw); const esHoy = dias === 0; const esPas = dias !== null && dias < 0;
                   return (
-                    <div key={p.id} className="ch" style={{ background: "#fff", border: "4px solid #000", position: "relative", overflow: "hidden" }}>
+                    <div key={p.id} className="ch" style={{ background: "#fff", border: "4px solid #000", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", height: "100%" }}>
                       <div style={{ background: "#000", color: "#fff", padding: "8px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <span style={{ fontFamily: "'Bebas Neue'", fontSize: 12, letterSpacing: 0.5 }}>🍄 {fmt(p.fechaRaw)}</span>
                         <span style={{ fontSize: 9, letterSpacing: 2, textTransform: "uppercase", border: "1px solid #fff", padding: "2px 6px" }}>{CAT_IC[p.categoria]} {p.categoria}</span>
                       </div>
-                      <div style={{ padding: "14px 12px" }}>
+                      <div style={{ padding: "14px 12px", display: "flex", flexDirection: "column", flexGrow: 1 }}>
                         <div style={{ fontFamily: "'Bebas Neue'", fontSize: 22, color: "#000", lineHeight: 1.1, marginBottom: 10, letterSpacing: 1 }}>{p.plan}</div>
-                        <div style={{ fontSize: 11, color: "#000", lineHeight: 1.5, borderLeft: "3px solid #000", paddingLeft: 8, marginBottom: 12 }}>{p.highlight}</div>
+                        <div style={{ fontSize: 11, color: "#000", lineHeight: 1.5, borderLeft: "3px solid #000", paddingLeft: 8, marginBottom: 12, display: "flex", alignItems: "center", flexGrow: 1 }}>{p.highlight}</div>
                         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
                           <div style={{
                             background: esHoy ? "#FDE047" : esPas ? "#222" : "#0a0a0a",
@@ -667,7 +667,7 @@ export default function App() {
                           </div>
                           <span style={{ fontSize: 10, color: "#000", opacity: .90, fontStyle: "italic" }}>{p.sentimiento}</span>
                         </div>
-                        <CardActions onEdit={() => setEditItem(p)} onDelete={() => setDeleteItem(p)} />
+                        <div style={{ marginTop: "auto" }}><CardActions onEdit={() => setEditItem(p)} onDelete={() => setDeleteItem(p)} /></div>
                       </div>
                       <div style={{ position: "absolute", bottom: -8, right: -4, fontSize: 52, opacity: .05, pointerEvents: "none" }}>🍄</div>
                     </div>
