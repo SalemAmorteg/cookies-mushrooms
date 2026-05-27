@@ -301,6 +301,30 @@ export default function App() {
           tipo: item.tipo
         }));
 
+        // AUTOMATIZACIÓN: Detectar planes futuros que ya expiraron (ayer o antes)
+        const planesExpirados = datosMapeados.filter(
+          item => item.tipo === 'futuro' && diasRestantes(item.fechaRaw) !== null && diasRestantes(item.fechaRaw) < 0
+        );
+
+        if (planesExpirados.length > 0) {
+          const idsAActualizar = planesExpirados.map(p => p.id);
+          
+          // 1. Enviamos la actualización en segundo plano a Supabase (asíncrona)
+          supabase
+            .from('actividades')
+            .update({ tipo: 'recuerdo' })
+            .in('id', idsAActualizar)
+            .then(({ error: updateError }) => {
+              if (updateError) {
+                console.error('Error al migrar planes expirados a recuerdos en Supabase:', updateError);
+              }
+            });
+
+          // 2. Modificamos el estado en caliente para que la mutación sea inmediata en la UI
+          planesExpirados.forEach(p => { p.tipo = 'recuerdo'; });
+        }
+
+        // Seteamos los estados usando los datos finales (ya actualizados si aplicaba)
         setCitas(datosMapeados.filter(item => item.tipo === 'recuerdo'));
         setPlanes(datosMapeados.filter(item => item.tipo === 'futuro'));
       }
