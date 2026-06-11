@@ -237,13 +237,19 @@ function DeleteModal({ item, onConfirm, onClose }) {
   );
 }
 
-function CardActions({ onEdit, onDelete, dark }) {
+function CardActions({ onEdit, onDelete }) {
   return (
-    <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
-      <button onClick={onEdit} style={{ flex: 1, background: "#000", border: `2px solid ${dark ? "#333" : "#00000033"}`, color: dark ? "#FDE047" : "#000", padding: "6px 0", fontFamily: "'Bebas Neue',sans-serif", fontSize: 13, letterSpacing: 1, cursor: "pointer" }}>
-        ✏️ EDITAR
+    <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: -10 }}>
+      <button onClick={onEdit} title="Editar" style={{
+        background: "transparent", border: "none", color: "#888", fontSize: 16,
+        cursor: "pointer", transition: "transform .2s", padding: 4
+      }} onMouseOver={e => e.target.style.transform = "scale(1.2)"} onMouseOut={e => e.target.style.transform = "scale(1)"}>
+        ✏️
       </button>
-      <button onClick={onDelete} style={{ background: "#000", border: "2px solid #ff333366", color: "#ff5555", padding: "6px 10px", fontFamily: "'Bebas Neue',sans-serif", fontSize: 13, letterSpacing: 1, cursor: "pointer" }}>
+      <button onClick={onDelete} title="Eliminar" style={{
+        background: "transparent", border: "none", color: "#888", fontSize: 16,
+        cursor: "pointer", transition: "transform .2s", padding: 4
+      }} onMouseOver={e => e.target.style.transform = "scale(1.2)"} onMouseOut={e => e.target.style.transform = "scale(1)"}>
         🗑️
       </button>
     </div>
