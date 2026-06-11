@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Clipboard, Check, X, AlertTriangle } from "lucide-react";
 import { supabase } from './supabaseClient';
-import { useEffect } from 'react'; // Asegúrate de tener useEffect aquí
+import { useEffect } from 'react';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -50,7 +50,7 @@ const RETOS = [
   { nombre: "Diccionario de Pareja", desc: "Escriban juntos 10 palabras inventadas que solo signifiquen algo para ustedes dos.", cat: "En Casa" },
   { nombre: "Tarde de Museos", desc: "Entren a un museo o galería gratuita y escojan cada uno una obra favorita. Expliquen por qué.", cat: "Cultura" },
   { nombre: "Librería al Azar", desc: "Cada uno elige un libro para el otro sin que lo vea. El intercambio es obligatorio.", cat: "Cultura" },
-  { nombre: "Cine Arte", desc: "Encuentren una sala de cine alternativo o cinemateca. Vean una película en un idioma que ninguno habla con fluidez.", cat: "Cultura" },
+  { fontName: "Cine Arte", desc: "Encuentren una sala de cine alternativo o cinemateca. Vean una película en un idioma que ninguno habla con fluidez.", cat: "Cultura" },
   { nombre: "Recrear la Primera Cita", desc: "Vuelvan al mismo lugar de su primera cita o recreen el ambiente en casa. Hablen de cómo se sentían ese día.", cat: "Fecha Especial" },
   { nombre: "Noche de las Preguntas", desc: "Busquen un mazo de preguntas para parejas. Sin filtros. La única regla: responder con honestidad.", cat: "Fecha Especial" },
   { nombre: "Bucket List Juntos", desc: "Cada uno escribe 10 cosas que quiere vivir con el otro. Compárenlas y elijan 5 para convertir en planes reales.", cat: "Fecha Especial" },
@@ -66,15 +66,16 @@ const BLANK = { fechaRaw: "", plan: "", categoria: "Cultura", highlight: "", sen
 function useCopy(ms = 2000) {
   const [ok, set] = useState(false);
   function copy(text) {
-    copyToClipboard(text)
-      .then(() => { set(true); setTimeout(() => set(false), ms); })
-      .catch(() => { set(true); setTimeout(() => set(false), ms); });
+    if (typeof copyToClipboard === "function") {
+      copyToClipboard(text)
+        .then(() => { set(true); setTimeout(() => set(false), ms); })
+        .catch(() => { set(true); setTimeout(() => set(false), ms); });
+    }
   }
   return [ok, copy];
 }
 
 // ── components ────────────────────────────────────────────────────────────────
-
 
 function EditModal({ item, onSave, onClose }) {
   const fut = item.tipo === "futuro";
@@ -86,6 +87,10 @@ function EditModal({ item, onSave, onClose }) {
     sentimiento: item.sentimiento,
     emoji: item.emoji
   });
+
+  // 📸 Estados para manejar la imagen dentro de la edición
+  const [imagenActual, setImagenActual] = useState(item.imageUrl || null);
+  const [archivoLocal, setArchivoLocal] = useState(null);
 
   const ac = fut ? "#fff" : "#FDE047";
   const inp = {
@@ -104,22 +109,18 @@ function EditModal({ item, onSave, onClose }) {
   }
 
   function doSave() {
-    onSave({ ...item, ...f });
+    onSave({
+      ...item,
+      ...f,
+      imageUrl: imagenActual,
+      nuevoArchivo: archivoLocal,
+      eliminarImagen: !imagenActual && item.imageUrl
+    });
   }
 
   return (
-    <div style=
-    {{
-      
-      position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 999,
-      display: "flex", alignItems: "center", justifyContent: "center", padding: 16
-    }}>
-      <div style={{
-        background: "#111", border: `4px solid ${ac}`, padding: 28,
-        width: "100%", maxWidth: 520, maxHeight: "90vh", overflowY: "auto"
-      }}>
-
-        {/* ENCABEZADO DEL MODAL */}
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div style={{ background: "#111", border: `4px solid ${ac}`, padding: 28, width: "100%", maxWidth: 520, maxHeight: "90vh", overflowY: "auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
           <div>
             <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 24, color: ac, letterSpacing: 2 }}>
@@ -127,69 +128,71 @@ function EditModal({ item, onSave, onClose }) {
             </div>
             <div style={{ fontSize: 9, color: "#555", letterSpacing: 2, textTransform: "uppercase" }}>#{item.id}</div>
           </div>
-          <button onClick={onClose} style={{
-            background: "#222", border: "2px solid #444", color: "#fff", width: 32, height: 32,
-            display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer"
-          }}>
+          <button onClick={onClose} style={{ background: "#222", border: "2px solid #444", color: "#fff", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
             <X size={16} />
           </button>
         </div>
 
-        {/* FORMULARIO DE EDICIÓN (CAMPOS RECONSTRUIDOS) */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: ac }}>📅 Fecha</label>
             <input type="date" name="fechaRaw" value={f.fechaRaw} onChange={ch} style={{ ...inp, colorScheme: "dark" }} />
           </div>
-
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: ac }}>🗂 Categoría</label>
             <select name="categoria" value={f.categoria} onChange={ch} style={inp}>
               {CATS.slice(1).map(c => <option key={c}>{c}</option>)}
             </select>
           </div>
-
           <div style={{ gridColumn: "1/-1", display: "flex", flexDirection: "column", gap: 6 }}>
             <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: ac }}>✏️ Plan / Título</label>
             <input name="plan" value={f.plan} onChange={ch} style={inp} />
           </div>
-
           <div style={{ gridColumn: "1/-1", display: "flex", flexDirection: "column", gap: 6 }}>
             <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: ac }}>
               {fut ? "🍄 Qué esperan" : "⭐ Highlight"}
             </label>
             <textarea name="highlight" value={f.highlight} onChange={ch} style={{ ...inp, minHeight: 70, resize: "vertical" }} />
           </div>
-
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: ac }}>💛 Sentimiento</label>
             <input name="sentimiento" value={f.sentimiento} onChange={ch} style={inp} />
           </div>
-
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: ac }}>✨ Emoji</label>
             <input name="emoji" value={f.emoji} onChange={ch} style={inp} />
           </div>
+          {/* 📸 INPUT DE IMAGEN EN EDICIÓN */}
+          <div style={{ gridColumn: "1/-1", display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
+            <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: ac }}>📸 Foto</label>
 
+            {imagenActual ? (
+              <div style={{ border: "2px solid #333", background: "#000", padding: 10, display: "flex", alignItems: "center", gap: 12 }}>
+                <img src={imagenActual} alt="Miniatura" style={{ width: 30, height: 30, objectFit: "cover", border: "1px solid #444" }} />
+                <div style={{ flex: 1, fontSize: 11, color: "#fff", fontWeight: "bold" }}>Foto actual</div>
+                <button type="button" onClick={() => setImagenActual(null)} style={{ background: "#ff3333", color: "#ffffff", border: "2px solid #000", fontFamily: "'Space Mono'", fontSize: 10, fontWeight: "bold", padding: "6px 12px", cursor: "pointer" }}>
+                  🗑️ QUITAR FOTO
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <input type="file" accept="image/*" id="edit-file-hidden" onChange={e => setArchivoLocal(e.target.files[0] || null)} style={{ display: 'none' }} />
+                <label htmlFor="edit-file-hidden" style={{ background: ac, border: "3px solid #000", color: "#000", padding: "8px 16px", fontFamily: "'Bebas Neue', sans-serif", fontSize: 13, letterSpacing: 2, cursor: "pointer", display: "inline-flex", gap: 8, boxShadow: "3px 3px 0 #000" }}>
+                  <span> {archivoLocal ? "Cambiar Foto" : "Adjuntar Foto"}</span>
+                </label>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* ACCIONES DEL MODAL */}
         <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
-          <button onClick={onClose} style={{
-            flex: 1, background: "#000", border: "3px solid #444", color: "#666",
-            padding: "10px", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16, letterSpacing: 2, cursor: "pointer"
-          }}>
+          <button onClick={onClose} style={{ flex: 1, background: "#000", border: "3px solid #444", color: "#ffffff", padding: "10px", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16, letterSpacing: 2, cursor: "pointer" }}>
             CANCELAR
           </button>
-          <button onClick={doSave} style={{
-            flex: 2, background: ac, border: `3px solid ${ac}`, color: "#000",
-            padding: "10px", fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 2, cursor: "pointer"
-          }}>
-            💾 GUARDAR CAMBIOS
+          <button onClick={doSave} style={{ flex: 2, background: ac, border: `3px solid ${ac}`, color: "#000", padding: "10px", fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 2, cursor: "pointer" }}>
+            GUARDAR CAMBIOS
           </button>
         </div>
-
       </div>
     </div>
   );
@@ -199,11 +202,8 @@ function DeleteModal({ item, onConfirm, onClose }) {
   const [done, setDone] = useState(false);
   function go() { onConfirm(); setDone(true); }
   return (
-    <div style={{
-      position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", zIndex: 999,
-      display: "flex", alignItems: "center", justifyContent: "center", padding: 16
-    }}>
-      <div style={{  background: "#111", border: "4px solid #ff3333", padding: 28, width: "100%", maxWidth: 440, textAlign: "center" }}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div style={{ background: "#111", border: "4px solid #ff3333", padding: 28, width: "100%", maxWidth: 440, textAlign: "center" }}>
         {!done ? (
           <>
             <div style={{ fontSize: 40, marginBottom: 12 }}>🗑️</div>
@@ -211,18 +211,12 @@ function DeleteModal({ item, onConfirm, onClose }) {
               ¿Eliminar este {item.tipo === "futuro" ? "plan" : "recuerdo"}?
             </div>
             <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: "#FDE047", marginBottom: 6 }}>{item.plan}</div>
-            <div style={{ fontSize: 11, color: "#555", marginBottom: 20 }}>Esta acción no se puede deshacer en la app.</div>
+            <div style={{ fontSize: 11, color: "#ffffff", marginBottom: 20 }}>Esta acción no se puede deshacer.</div>
             <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={onClose} style={{
-                flex: 1, background: "#000", border: "3px solid #444", color: "#666",
-                padding: "10px", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16, letterSpacing: 2, cursor: "pointer"
-              }}>
+              <button onClick={onClose} style={{ flex: 1, background: "#000", border: "3px solid #444", color: "#ffffff", padding: "10px", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16, letterSpacing: 2, cursor: "pointer" }}>
                 CANCELAR
               </button>
-              <button onClick={go} style={{
-                flex: 1, background: "#ff3333", border: "3px solid #ff3333", color: "#fff",
-                padding: "10px", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16, letterSpacing: 2, cursor: "pointer"
-              }}>
+              <button onClick={go} style={{ flex: 1, background: "#ff3333", border: "3px solid #ff3333", color: "#fff", padding: "10px", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16, letterSpacing: 2, cursor: "pointer" }}>
                 SÍ, ELIMINAR
               </button>
             </div>
@@ -233,10 +227,7 @@ function DeleteModal({ item, onConfirm, onClose }) {
             <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: "#FDE047", letterSpacing: 2, marginBottom: 4 }}>
               Eliminado de la app
             </div>
-            <button onClick={onClose} style={{
-              width: "100%", marginTop: 16, background: "#FDE047", border: "3px solid #000",
-              color: "#000", padding: "10px", fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 2, cursor: "pointer"
-            }}>
+            <button onClick={onClose} style={{ width: "100%", marginTop: 16, background: "#FDE047", border: "3px solid #000", color: "#000", padding: "10px", fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 2, cursor: "pointer" }}>
               ENTENDIDO
             </button>
           </>
@@ -249,19 +240,11 @@ function DeleteModal({ item, onConfirm, onClose }) {
 function CardActions({ onEdit, onDelete, dark }) {
   return (
     <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
-      <button onClick={onEdit} style={{
-        flex: 1, background: "#000", border: `2px solid ${dark ? "#333" : "#00000033"}`,
-        color: dark ? "#FDE047" : "#000", padding: "6px 0",
-        fontFamily: "'Bebas Neue',sans-serif", fontSize: 13, letterSpacing: 1, cursor: "pointer"
-      }}>
+      <button onClick={onEdit} style={{ flex: 1, background: "#000", border: `2px solid ${dark ? "#333" : "#00000033"}`, color: dark ? "#FDE047" : "#000", padding: "6px 0", fontFamily: "'Bebas Neue',sans-serif", fontSize: 13, letterSpacing: 1, cursor: "pointer" }}>
         ✏️ EDITAR
       </button>
-      <button onClick={onDelete} style={{
-        background: "#000", border: "2px solid #ff333366",
-        color: "#ff5555", padding: "6px 10px",
-        fontFamily: "'Bebas Neue',sans-serif", fontSize: 13, letterSpacing: 1, cursor: "pointer"
-      }}>
-        🗑
+      <button onClick={onDelete} style={{ background: "#000", border: "2px solid #ff333366", color: "#ff5555", padding: "6px 10px", fontFamily: "'Bebas Neue',sans-serif", fontSize: 13, letterSpacing: 1, cursor: "pointer" }}>
+        🗑️
       </button>
     </div>
   );
@@ -282,6 +265,8 @@ export default function App() {
   const [editItem, setEditItem] = useState(null);
   const [deleteItem, setDeleteItem] = useState(null);
 
+  // 📸 Estado local para el archivo multimedia seleccionado
+  const [file, setFile] = useState(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -289,42 +274,36 @@ export default function App() {
       if (error) {
         console.error('Error al cargar datos desde Supabase:', error);
       } else if (data) {
-        // Formateamos de forma estricta todo lo que viene de la DB a camelCase para React
         const datosMapeados = data.map(item => ({
           id: item.id,
-          fechaRaw: item.fecha_raw, // Mapeo crítico de snake_case a camelCase
+          fechaRaw: item.fecha_raw,
           plan: item.plan,
           categoria: item.categoria,
           highlight: item.highlight,
           sentimiento: item.sentimiento,
           emoji: item.emoji,
-          tipo: item.tipo
+          tipo: item.tipo,
+          // Mapeamos dinámicamente el URL de la imagen si ya existe en tu DB
+          imageUrl: item.imagen_url || item.imagen_url || null
         }));
 
-        // AUTOMATIZACIÓN: Detectar planes futuros que ya expiraron (ayer o antes)
         const planesExpirados = datosMapeados.filter(
           item => item.tipo === 'futuro' && diasRestantes(item.fechaRaw) !== null && diasRestantes(item.fechaRaw) < 0
         );
 
         if (planesExpirados.length > 0) {
           const idsAActualizar = planesExpirados.map(p => p.id);
-          
-          // 1. Enviamos la actualización en segundo plano a Supabase (asíncrona)
           supabase
             .from('actividades')
             .update({ tipo: 'recuerdo' })
             .in('id', idsAActualizar)
             .then(({ error: updateError }) => {
-              if (updateError) {
-                console.error('Error al migrar planes expirados a recuerdos en Supabase:', updateError);
-              }
+              if (updateError) console.error('Error al migrar planes:', updateError);
             });
 
-          // 2. Modificamos el estado en caliente para que la mutación sea inmediata en la UI
           planesExpirados.forEach(p => { p.tipo = 'recuerdo'; });
         }
 
-        // Seteamos los estados usando los datos finales (ya actualizados si aplicaba)
         setCitas(datosMapeados.filter(item => item.tipo === 'recuerdo'));
         setPlanes(datosMapeados.filter(item => item.tipo === 'futuro'));
       }
@@ -334,20 +313,22 @@ export default function App() {
 
   const citasF = useMemo(
     () => [...citas].filter(c => filtro === "Todas" || c.categoria === filtro)
-      .sort((a, b) => parsefecha(a.fechaRaw) - parsefecha(b.fechaRaw)),
+      .sort((a, b) => parsefecha(b.fechaRaw) - parsefecha(a.fechaRaw)), // Orden de más reciente a más antiguo ideal para Feed
     [citas, filtro]
   );
-  
+
   const planesF = useMemo(
     () => [...planes].filter(p => filtro === "Todas" || p.categoria === filtro)
       .sort((a, b) => parsefecha(a.fechaRaw) - parsefecha(b.fechaRaw)),
     [planes, filtro]
   );
+
   const stats = useMemo(() => {
     const c = {}; CATS.slice(1).forEach(k => c[k] = 0);
     [...citas, ...planes].forEach(x => { if (c[x.categoria] !== undefined) c[x.categoria]++; });
     return c;
   }, [citas, planes]);
+
   const prox = useMemo(() => {
     const h = new Date(); h.setHours(0, 0, 0, 0);
     return [...planes].filter(p => parsefecha(p.fechaRaw) >= h)
@@ -357,7 +338,32 @@ export default function App() {
   async function submit() {
     if (!form.fechaRaw || !form.plan || !form.highlight) return;
 
-    // Estructura estricta para las columnas de Supabase
+    let urlFinalFoto = null;
+
+    // 1. Subir la imagen al Storage si hay un archivo seleccionado
+    if (file) {
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('multimedia') // Asegúrate de que el bucket se llama así
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage
+          .from('multimedia')
+          .getPublicUrl(fileName);
+
+        urlFinalFoto = publicUrlData.publicUrl;
+      } catch (err) {
+        console.error("Error al subir la imagen en Supabase Storage:", err);
+        alert("Hubo un problema al subir la imagen, pero se guardará el recuerdo sin foto.");
+      }
+    }
+
+    // 2. Preparar el objeto para guardar en la base de datos
     const newItem = {
       fecha_raw: form.fechaRaw,
       plan: form.plan,
@@ -365,18 +371,18 @@ export default function App() {
       highlight: form.highlight,
       sentimiento: form.sentimiento,
       emoji: form.emoji,
-      tipo: tipoForm
+      tipo: tipoForm,
+      imagen_url: urlFinalFoto // Asociar la URL de la imagen
     };
 
+    // 3. Guardar el registro en la base de datos
     const { data, error } = await supabase.from('actividades').insert([newItem]).select();
 
     if (error) {
       console.error("Error al guardar en Supabase:", error);
     } else {
       let itemParaEstado;
-
       if (data && data.length > 0) {
-        // Si Supabase responde con el objeto, lo mapeamos inmediatamente a camelCase
         itemParaEstado = {
           id: data[0].id,
           fechaRaw: data[0].fecha_raw,
@@ -385,34 +391,79 @@ export default function App() {
           highlight: data[0].highlight,
           sentimiento: data[0].sentimiento,
           emoji: data[0].emoji,
-          tipo: data[0].tipo
+          tipo: data[0].tipo,
+          imageUrl: data[0].imagen_url || data[0].imagen_url || null
         };
       } else {
-        // Si por RLS 'data' viene vacío, usamos el estado del formulario con un ID temporal
         itemParaEstado = {
-          id: Date.now(), 
+          id: Date.now(),
           fechaRaw: form.fechaRaw,
           plan: form.plan,
           categoria: form.categoria,
           highlight: form.highlight,
           sentimiento: form.sentimiento,
           emoji: form.emoji,
-          tipo: tipoForm
+          tipo: tipoForm,
+          imageUrl: urlFinalFoto
         };
       }
 
-      // Inyectar al estado local de React de forma consistente
+      // 4. Actualizar el estado de React para mostrar el nuevo recuerdo
       if (tipoForm === "recuerdo") {
-        setCitas(p => [...p, itemParaEstado]);
+        setCitas(p => [itemParaEstado, ...p]);
       } else {
         setPlanes(p => [...p, itemParaEstado]);
       }
-      
+
+      // 5. Limpiar el formulario
       setForm(BLANK);
+      setFile(null); // Limpiar foto seleccionada
     }
   }
+
   async function saveEdit(updatedItem) {
-    // 1. Estructurar los datos exactamente como los espera Supabase (con guiones bajos)
+    let urlFinalFoto = updatedItem.imageUrl;
+
+    try {
+      if (updatedItem.nuevoArchivo) {
+        const fileExt = updatedItem.nuevoArchivo.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('multimedia')
+          .upload(fileName, updatedItem.nuevoArchivo);
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage
+          .from('multimedia')
+          .getPublicUrl(fileName);
+
+        urlFinalFoto = publicUrlData.publicUrl;
+
+      } else if (updatedItem.eliminarImagen) {
+        // 💥 NUEVO: Si el usuario eliminó la foto en el modal, la borramos del Storage
+        // Tu EditModal pasa la URL vieja dentro de 'eliminarImagen'
+        const urlVieja = updatedItem.eliminarImagen;
+        if (typeof urlVieja === 'string') {
+          // decodeURIComponent limpia caracteres raros como %20 por espacios
+          const fileName = decodeURIComponent(urlVieja.split('/').pop());
+
+          const { error: deleteStorageError } = await supabase.storage
+            .from('multimedia')
+            .remove([fileName]);
+
+          if (deleteStorageError) {
+            console.error("Error al eliminar archivo del Storage al editar:", deleteStorageError);
+          }
+        }
+        urlFinalFoto = null; // Hacemos null la URL para la base de datos
+      }
+    } catch (err) {
+      console.error("Error al procesar la imagen en Supabase Storage:", err);
+      alert("Hubo un problema procesando la imagen, pero intentaremos guardar el texto.");
+    }
+
     const dataToUpdate = {
       fecha_raw: updatedItem.fechaRaw,
       plan: updatedItem.plan,
@@ -420,48 +471,63 @@ export default function App() {
       highlight: updatedItem.highlight,
       sentimiento: updatedItem.sentimiento,
       emoji: updatedItem.emoji,
-      tipo: updatedItem.tipo
+      tipo: updatedItem.tipo,
+      imagen_url: urlFinalFoto // Tu columna corregida 🎉
     };
 
-    // 2. Hacer la petición UPDATE en la tabla 'actividades'
-    const { error } = await supabase
-      .from('actividades')
-      .update(dataToUpdate)
-      .eq('id', updatedItem.id);
+    const { error } = await supabase.from('actividades').update(dataToUpdate).eq('id', updatedItem.id);
 
     if (error) {
       console.error("Error al actualizar en Supabase:", error);
     } else {
-      // 3. Si todo sale bien en la nube, actualizamos el estado de React para que se vea en pantalla
+      const itemParaEstado = { ...updatedItem, imageUrl: urlFinalFoto };
+      delete itemParaEstado.nuevoArchivo;
+      delete itemParaEstado.eliminarImagen;
+
       if (updatedItem.tipo === "recuerdo") {
-        setCitas(p => p.map(c => c.id === updatedItem.id ? updatedItem : c));
+        setCitas(p => p.map(c => c.id === updatedItem.id ? itemParaEstado : c));
       } else {
-        setPlanes(p => p.map(c => c.id === updatedItem.id ? updatedItem : c));
+        setPlanes(p => p.map(c => c.id === updatedItem.id ? itemParaEstado : c));
       }
-      // 4. Cerramos el modal de edición automáticamente
+
       setEditItem(null);
     }
   }
   async function confirmDel() {
     if (!deleteItem) return;
 
-    // 1. Borrar de la base de datos en Supabase usando su ID único
-    const { error } = await supabase
-      .from('actividades')
-      .delete()
-      .eq('id', deleteItem.id);
+    // 1. Limpieza del Storage con decodificación segura
+    if (deleteItem.imageUrl) {
+      try {
+        // decodeURIComponent soluciona problemas con %20, guiones o caracteres especiales
+        const fileName = decodeURIComponent(deleteItem.imageUrl.split('/').pop());
+
+        const { error: storageError } = await supabase.storage
+          .from('multimedia')
+          .remove([fileName]);
+
+        if (storageError) {
+          console.error("Error directo de Supabase Storage al eliminar:", storageError);
+        } else {
+          console.log("Imagen eliminada del Storage con éxito:", fileName);
+        }
+      } catch (err) {
+        console.error("Error procesando la eliminación de la imagen:", err);
+      }
+    }
+
+    // 2. Limpieza de la Base de Datos
+    const { error } = await supabase.from('actividades').delete().eq('id', deleteItem.id);
 
     if (error) {
       console.error("Error al eliminar de Supabase:", error);
     } else {
-      // 2. Si se borró con éxito en la nube, actualizar la pantalla local
       if (deleteItem.tipo === "recuerdo") {
         setCitas(p => p.filter(c => c.id !== deleteItem.id));
       } else {
         setPlanes(p => p.filter(c => c.id !== deleteItem.id));
       }
     }
-    // 3. Cerrar el modal automáticamente
     setDeleteItem(null);
   }
 
@@ -475,19 +541,13 @@ export default function App() {
     <div style={{ fontFamily: "'Space Mono',monospace", background: "#0a0a0a", minHeight: "100vh", color: "#fff" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap');
-        html, body, #root {
-          margin: 0;
-          padding: 0;
-          width: 100%;
-          min-height: 100vh;
-          background-color: #0a0a0a;
-        }
+        html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100vh; background-color: #0a0a0a; }
         *{box-sizing:border-box;}
         ::-webkit-scrollbar{width:4px;height:4px;}
         ::-webkit-scrollbar-track{background:#111;}
         ::-webkit-scrollbar-thumb{background:#FDE047;}
         .ch{transition:transform .15s,box-shadow .15s;}
-        .ch:hover{transform:translate(-3px,-3px);box-shadow:6px 6px 0 #000!important;}
+        .ch:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 #000!important;}
         .ta{color:#FDE047!important;border-bottom:3px solid #FDE047!important;}
         .fa{background:#FDE047!important;border-color:#FDE047!important;color:#000!important;}
         input,select,textarea{font-family:'Space Mono',monospace;}
@@ -496,18 +556,17 @@ export default function App() {
         .pulse{animation:pulse 2s infinite;}
       `}</style>
 
-      {showMaestro && <MaestroModal citas={citas} planes={planes} onClose={() => setShowMaestro(false)} />}
       {editItem && <EditModal item={editItem} onSave={saveEdit} onClose={() => setEditItem(null)} />}
       {deleteItem && <DeleteModal item={deleteItem} onConfirm={confirmDel} onClose={() => setDeleteItem(null)} />}
 
       {/* HEADER */}
       <div style={{ background: "#FDE047", borderBottom: "4px solid #000", padding: "14px 20px", position: "sticky", top: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: 920, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexDirection: "row", flexWrap: "wrap", gap: 12, width: "100%" }}>
+        <div style={{ maxWidth: 920, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, width: "100%" }}>
           <div>
-            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: "#000", letterSpacing: 2, lineHeight: 1,  }}>🍪 Cookies &amp; Mushrooms 🍄</div>
-            <div style={{ fontSize: 9, color: "#000", opacity: .6, letterSpacing: 3, textTransform: "uppercase", marginTop: 2 }}>Bitácora de Pareja </div>
+            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: "#000", letterSpacing: 2, lineHeight: 1 }}>🍪 Cookies &amp; Mushrooms 🍄</div>
+            <div style={{ fontSize: 9, color: "#000", opacity: .6, letterSpacing: 3, textTransform: "uppercase", marginTop: 2 }}>Bitácora de Pareja</div>
           </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <div style={{ background: "#000", color: "#FDE047", padding: "6px 12px", fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 1 }}>
               🍪 {citas.length}
             </div>
@@ -516,23 +575,18 @@ export default function App() {
             </div>
           </div>
         </div>
-
       </div>
 
       {/* TABS */}
-      <div style={{ background: "#111", borderBottom: "3px solid #FDE047", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-        <div style={{
-          maxWidth: 650, margin: "0 auto", display: "flex", width: "100%",
-          justifyContent: "flex-start"
-        }}>
+      <div style={{ background: "#111", borderBottom: "3px solid #FDE047", overflowX: "auto" }}>
+        <div style={{ maxWidth: 650, margin: "0 auto", display: "flex", width: "100%" }}>
           {TABS.map(([k, l]) => (
             <button key={k} onClick={() => setTab(k)} className={tab === k ? "ta" : ""}
               style={{
                 padding: "12px 18px", fontFamily: "'Space Mono'", fontSize: 12, fontWeight: 700,
                 textTransform: "uppercase", letterSpacing: 3, color: tab === k ? "#FDE047" : "#555",
                 cursor: "pointer", border: "none", background: "none",
-                borderBottom: tab === k ? "3px solid #FDE047" : "3px solid transparent",
-                marginBottom: -3, whiteSpace: "nowrap"
+                borderBottom: tab === k ? "3px solid #FDE047" : "3px solid transparent", marginBottom: -3, whiteSpace: "nowrap"
               }}>
               {l}
             </button>
@@ -542,7 +596,7 @@ export default function App() {
 
       <div style={{ maxWidth: 920, margin: "0 auto", padding: "24px 16px" }}>
 
-        {/* MURO */}
+        {/* MURO (RECUERDOS TIPO INSTAGRAM) */}
         {tab === "muro" && (
           <>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(210px,1fr))", gap: 15, marginBottom: 24 }}>
@@ -576,23 +630,37 @@ export default function App() {
                 <div style={{ fontFamily: "'Bebas Neue'", fontSize: 22, color: "#444", letterSpacing: 2 }}>Sin recuerdos aquí... ¡aún!</div>
               </div>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 16 }}>
+              /* FEED VERTICAL - TIPO INSTAGRAM */
+              <div style={{ display: "flex", flexDirection: "column", gap: 32, maxWidth: 480, margin: "0 auto" }}>
                 {citasF.map(c => (
-                  <div key={c.id} className="ch" style={{ background: "#FDE047", border: "4px solid #000", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", height: "100%" }}>
-                    <div style={{ background: "#000", color: "#FDE047", padding: "8px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontFamily: "'Bebas Neue'", fontSize: 12, letterSpacing: 0.5 }}>🍪 {fmt(c.fechaRaw)}</span>
+                  <div key={c.id} className="ch" style={{ background: "#FDE047", border: "4px solid #000", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+
+                    {/* Barra Superior del Post */}
+                    <div style={{ background: "#000", color: "#FDE047", padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontFamily: "'Bebas Neue'", fontSize: 13, letterSpacing: 0.5 }}>🍪 {fmt(c.fechaRaw)}</span>
                       <span style={{ fontSize: 9, letterSpacing: 2, textTransform: "uppercase", border: "1px solid #FDE047", padding: "2px 6px" }}>{CAT_IC[c.categoria]} {c.categoria}</span>
                     </div>
-                    <div style={{ padding: "14px 12px", display: "flex", flexDirection: "column", flexGrow: 1 }}>
-                      <div style={{ fontFamily: "'Bebas Neue'", fontSize: 22, color: "#000", lineHeight: 1.1, marginBottom: 10, letterSpacing: 1 }}>{c.plan}</div>
-                      <div style={{ fontSize: 11, color: "#000", lineHeight: 1.5, borderLeft: "3px solid #000", paddingLeft: 8, marginBottom: 10, display: "flex", alignItems: "center", flexGrow: 1 }}>{c.highlight}</div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: 15 }}>{c.emoji}</span>
-                        <span style={{ fontSize: 10, color: "#000", opacity: .90, fontStyle: "italic" }}>{c.sentimiento}</span>
+
+                    {/* Espacio Multimedia (Foto) estilo Instagram */}
+                    {c.imageUrl && (
+                      <div style={{ width: "100%", borderBottom: "4px solid #000", background: "#000", display: "flex", justifyContent: "center", alignItems: "center", maxHeight: 450, overflow: "hidden" }}>
+                        <img src={c.imageUrl} alt={c.plan} style={{ width: "100%", height: "auto", display: "block", objectFit: "cover" }} />
                       </div>
-                      <div style={{ marginTop: "auto" }}><CardActions dark onEdit={() => setEditItem(c)} onDelete={() => setDeleteItem(c)} /></div>
+                    )}
+
+                    {/* Pie del Post (Información del Recuerdo) */}
+                    <div style={{ padding: "16px 14px", display: "flex", flexDirection: "column" }}>
+                      <div style={{ fontFamily: "'Bebas Neue'", fontSize: 24, color: "#000", lineHeight: 1.1, marginBottom: 8, letterSpacing: 1 }}>{c.plan}</div>
+                      <div style={{ fontSize: 12, color: "#000", lineHeight: 1.6, borderLeft: "3px solid #000", paddingLeft: 10, marginBottom: 12 }}>{c.highlight}</div>
+
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: 18 }}>{c.emoji}</span>
+                        <span style={{ fontSize: 11, color: "#000", opacity: .85, fontStyle: "italic", fontWeight: "700" }}>{c.sentimiento}</span>
+                      </div>
+
+                      <div style={{ marginTop: 14 }}><CardActions dark onEdit={() => setEditItem(c)} onDelete={() => setDeleteItem(c)} /></div>
                     </div>
-                    <div style={{ position: "absolute", bottom: -8, right: -4, fontSize: 52, opacity: .06, pointerEvents: "none" }}>🍪</div>
+                    <div style={{ position: "absolute", bottom: -8, right: -4, fontSize: 52, opacity: .04, pointerEvents: "none" }}>🍪</div>
                   </div>
                 ))}
               </div>
@@ -606,10 +674,7 @@ export default function App() {
             {prox && (() => {
               const dias = diasRestantes(prox.fechaRaw);
               return (
-                <div style={{
-                  background: "#FDE047", border: "4px solid #000", padding: 20, marginBottom: 24,
-                  display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap"
-                }}>
+                <div style={{ background: "#FDE047", border: "4px solid #000", padding: 20, marginBottom: 24, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
                   <div className={dias !== null && dias <= 3 ? "pulse" : ""} style={{ textAlign: "center" }}>
                     <div style={{ fontFamily: "'Bebas Neue'", fontSize: 11, letterSpacing: 3, color: "#000", textTransform: "uppercase", marginBottom: 4 }}>Próximo plan</div>
                     <div style={{ fontFamily: "'Bebas Neue'", fontSize: dias === 0 ? 14 : 48, color: "#000", lineHeight: 1 }}>
@@ -658,11 +723,7 @@ export default function App() {
                         <div style={{ fontFamily: "'Bebas Neue'", fontSize: 22, color: "#000", lineHeight: 1.1, marginBottom: 10, letterSpacing: 1 }}>{p.plan}</div>
                         <div style={{ fontSize: 11, color: "#000", lineHeight: 1.5, borderLeft: "3px solid #000", paddingLeft: 8, marginBottom: 12, display: "flex", alignItems: "center", flexGrow: 1 }}>{p.highlight}</div>
                         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                          <div style={{
-                            background: esHoy ? "#FDE047" : esPas ? "#222" : "#0a0a0a",
-                            color: esHoy ? "#000" : "#FDE047", border: "2px solid #000",
-                            padding: "4px 10px", fontFamily: "'Bebas Neue'", fontSize: 14, letterSpacing: 2
-                          }}>
+                          <div style={{ background: esHoy ? "#FDE047" : esPas ? "#222" : "#0a0a0a", color: esHoy ? "#000" : "#FDE047", border: "2px solid #000", padding: "4px 10px", fontFamily: "'Bebas Neue'", fontSize: 14, letterSpacing: 2 }}>
                             {esHoy ? "¡HOY! 🎉" : esPas ? `Hace ${Math.abs(dias)}d` : `Faltan ${dias} días`}
                           </div>
                           <span style={{ fontSize: 10, color: "#000", opacity: .90, fontStyle: "italic" }}>{p.sentimiento}</span>
@@ -736,18 +797,67 @@ export default function App() {
                 <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: tipoForm === "futuro" ? "#fff" : "#FDE047" }}>✨ Emoji</label>
                 <input value={form.emoji} onChange={e => setForm(p => ({ ...p, emoji: e.target.value }))} placeholder="Ej: 🌸" style={SI} />
               </div>
+
+              {/* 📸 INPUT DE IMAGEN INTEGRADO Y ESTILIZADO (Solo en modo Recuerdo) */}
+              {tipoForm === "recuerdo" && (
+                <div style={{ gridColumn: "1/-1", display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
+                  <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#FDE047" }}>
+                    📸 Foto del Recuerdo
+                  </label>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+
+                    {/* El input real nativo se mantiene oculto */}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id="archivo-input-hidden"
+                      onChange={e => { if (e.target.files && e.target.files[0]) setFile(e.target.files[0]); }}
+                      style={{ display: 'none' }}
+                    />
+
+                    {/* Botón Neo-Brutalista conectado */}
+                    <label
+                      htmlFor="archivo-input-hidden"
+                      style={{
+                        background: "#FDE047",
+                        border: "3px solid #000",
+                        color: "#000",
+                        padding: "10px 20px",
+                        fontFamily: "'Bebas Neue', sans-serif",
+                        fontSize: 16,
+                        letterSpacing: 2,
+                        textTransform: "uppercase",
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 8,
+                        boxShadow: "4px 4px 0 #000",
+                        transition: "transform 0.1s, box-shadow 0.1s"
+                      }}
+                      onMouseDown={(e) => { e.currentTarget.style.transform = 'translate(2px, 2px)'; e.currentTarget.style.boxShadow = '2px 2px 0 #000'; }}
+                      onMouseUp={(e) => { e.currentTarget.style.transform = 'translate(0px, 0px)'; e.currentTarget.style.boxShadow = '4px 4px 0 #000'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translate(0px, 0px)'; e.currentTarget.style.boxShadow = '4px 4px 0 #000'; }}
+                    >
+                      <span>✨ Seleccionar Foto</span>
+                    </label>
+
+                    {/* Feedback del nombre del archivo */}
+                    <span style={{ fontSize: 11, color: "#666", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}>
+                      {file ? file.name : "Ninguna foto..."}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
             <button onClick={submit}
               style={{
                 background: tipoForm === "futuro" ? "#fff" : "#FDE047", border: `3px solid ${tipoForm === "futuro" ? "#fff" : "#FDE047"}`,
                 color: "#000", padding: "12px 24px", fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: 2,
-                cursor: "pointer", width: "100%", marginTop: 16
+                cursor: "pointer", width: "100%", marginTop: 20
               }}>
               {tipoForm === "futuro" ? "🍄 GUARDAR PLAN FUTURO" : "🍪 GUARDAR RECUERDO"}
             </button>
-
-            {lastRow && <NewRowBox row={lastRow.row} tipo={lastRow.tipo} onDismiss={() => setLastRow(null)} />}
           </div>
         )}
 
@@ -774,7 +884,7 @@ export default function App() {
                   <div style={{ display: "inline-block", border: "2px solid #FDE047", padding: "3px 12px", fontSize: 10, letterSpacing: 2, textTransform: "uppercase" }}>
                     {CAT_IC[reto.cat]} {reto.cat}
                   </div>
-                  <button onClick={() => { setTipoForm("futuro"); setForm(f => ({ ...f, plan: reto.nombre, highlight: reto.desc, categoria: reto.cat })); setLastRow(null); setTab("nueva"); }}
+                  <button onClick={() => { setTipoForm("futuro"); setForm(f => ({ ...f, plan: reto.nombre, highlight: reto.desc, categoria: reto.cat })); setTab("nueva"); }}
                     style={{
                       background: "#FDE047", color: "#000", border: "none", padding: "6px 16px",
                       fontFamily: "'Bebas Neue'", fontSize: 16, letterSpacing: 1, cursor: "pointer"
