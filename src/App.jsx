@@ -577,16 +577,20 @@ export default function App() {
         </div>
       </div>
 
-      {/* TABS */}
-      <div style={{ background: "#111", borderBottom: "3px solid #FDE047", overflowX: "auto" }}>
-        <div style={{ maxWidth: 650, margin: "0 auto", display: "flex", width: "100%" }}>
+      {/* TABS (MENÚ MÁS ACCESIBLE Y MODERNO) */}
+      <div style={{ background: "#0a0a0a", padding: "16px 12px", position: "sticky", top: 65, zIndex: 90, borderBottom: "2px solid #222" }}>
+        <div style={{ maxWidth: 650, margin: "0 auto", display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
           {TABS.map(([k, l]) => (
-            <button key={k} onClick={() => setTab(k)} className={tab === k ? "ta" : ""}
+            <button key={k} onClick={() => setTab(k)}
               style={{
-                padding: "12px 18px", fontFamily: "'Space Mono'", fontSize: 12, fontWeight: 700,
-                textTransform: "uppercase", letterSpacing: 3, color: tab === k ? "#FDE047" : "#555",
-                cursor: "pointer", border: "none", background: "none",
-                borderBottom: tab === k ? "3px solid #FDE047" : "3px solid transparent", marginBottom: -3, whiteSpace: "nowrap"
+                padding: "10px 16px", fontFamily: "'Space Mono'", fontSize: 12, fontWeight: 700,
+                textTransform: "uppercase", letterSpacing: 1.5,
+                color: tab === k ? "#000" : "#aaa",
+                background: tab === k ? "#FDE047" : "#1a1a1a",
+                border: tab === k ? "2px solid #000" : "2px solid #333",
+                borderRadius: "24px", cursor: "pointer", whiteSpace: "nowrap",
+                transition: "all 0.2s",
+                boxShadow: tab === k ? "2px 2px 0 #000" : "none"
               }}>
               {l}
             </button>
