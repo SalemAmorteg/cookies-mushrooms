@@ -739,48 +739,62 @@ export default function App() {
           </>
         )}
 
-        {/* REGISTRAR */}
+        {/* REGISTRAR (INTELIGENTE) */}
         {tab === "nueva" && (
-          <div style={{ background: "#111", border: `4px solid ${tipoForm === "futuro" ? "#fff" : "#FDE047"}`, padding: 24, transition: "border-color .2s" }}>
-            <div style={{ fontFamily: "'Bebas Neue'", fontSize: 26, color: tipoForm === "futuro" ? "#fff" : "#FDE047", letterSpacing: 2, marginBottom: 4 }}>
-              {tipoForm === "recuerdo" ? "🍪 Registrar Recuerdo" : "🍄 Registrar Plan Futuro"}
-            </div>
+          <div style={{ background: "#111", border: `4px solid ${tipoForm === "futuro" ? "#fff" : "#FDE047"}`, padding: 24, transition: "all .3s ease" }}>
 
-            <div style={{ display: "flex", background: "#000", border: "3px solid #333", overflow: "hidden", marginBottom: 20 }}>
-              <button onClick={() => { setTipoForm("recuerdo"); setLastRow(null); }}
-                style={{
-                  flex: 1, padding: "10px 8px", fontFamily: "'Bebas Neue'", fontSize: 16, letterSpacing: 2, border: "none",
-                  cursor: "pointer", background: tipoForm === "recuerdo" ? "#FDE047" : "#000", color: tipoForm === "recuerdo" ? "#000" : "#555", transition: "all .15s"
-                }}>
-                🍪 Recuerdo
-              </button>
-              <button onClick={() => { setTipoForm("futuro"); setLastRow(null); }}
-                style={{
-                  flex: 1, padding: "10px 8px", fontFamily: "'Bebas Neue'", fontSize: 16, letterSpacing: 2, border: "none",
-                  cursor: "pointer", background: tipoForm === "futuro" ? "#fff" : "#000", color: tipoForm === "futuro" ? "#000" : "#555",
-                  transition: "all .15s", borderLeft: "2px solid #222"
-                }}>
-                🍄 Plan Futuro
-              </button>
+            {/* Cabecera dinámica */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <div style={{ fontFamily: "'Bebas Neue'", fontSize: 28, color: tipoForm === "futuro" ? "#fff" : "#FDE047", letterSpacing: 2 }}>
+                {tipoForm === "recuerdo" ? "🍪 Nuevo Recuerdo" : "🍄 Nuevo Plan Futuro"}
+              </div>
+              <div style={{ background: tipoForm === "futuro" ? "#fff" : "#FDE047", color: "#000", padding: "4px 10px", fontSize: 10, fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1 }}>
+                {tipoForm === "futuro" ? "¿Todo preparado?" : "Registren sus mejores momentos"}
+              </div>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: tipoForm === "futuro" ? "#fff" : "#FDE047" }}>
-                  📅 {tipoForm === "futuro" ? "Fecha Planeada" : "Fecha"}
+              {/* FECHA INTELIGENTE */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, gridColumn: "1/-1" }}>
+                <label style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: tipoForm === "futuro" ? "#fff" : "#FDE047" }}>
+                  📅 ¿Cuándo {tipoForm === "futuro" ? "será" : "fue"}?
                 </label>
-                <input type="date" value={form.fechaRaw} onChange={e => setForm(p => ({ ...p, fechaRaw: e.target.value }))} style={{ ...SI, colorScheme: "dark" }} />
+                <input
+                  type="date"
+                  value={form.fechaRaw}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setForm(p => ({ ...p, fechaRaw: val }));
+                    if (val) {
+                      // Lógica inteligente para detectar futuro o pasado
+                      const [y, m, d] = val.split('-');
+                      const selected = new Date(y, m - 1, d);
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      setTipoForm(selected > today ? "futuro" : "recuerdo");
+                    }
+                  }}
+                  style={{ ...SI, colorScheme: "dark", fontSize: 16, padding: "12px" }}
+                />
               </div>
+
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: tipoForm === "futuro" ? "#fff" : "#FDE047" }}>🗂 Categoría</label>
                 <select value={form.categoria} onChange={e => setForm(p => ({ ...p, categoria: e.target.value }))} style={SI}>
                   {CATS.slice(1).map(c => <option key={c}>{c}</option>)}
                 </select>
               </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: tipoForm === "futuro" ? "#fff" : "#FDE047" }}>✨ Emoji</label>
+                <input value={form.emoji} onChange={e => setForm(p => ({ ...p, emoji: e.target.value }))} placeholder="Ej: 🌸" style={SI} />
+              </div>
+
               <div style={{ gridColumn: "1/-1", display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: tipoForm === "futuro" ? "#fff" : "#FDE047" }}>✏️ Plan / Título</label>
+                <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: tipoForm === "futuro" ? "#fff" : "#FDE047" }}>✏️ {tipoForm === "futuro" ? "Plan / Título" : "Título del Recuerdo"}</label>
                 <input value={form.plan} onChange={e => setForm(p => ({ ...p, plan: e.target.value }))} placeholder="Ej: Tarde en el Museo de Arte" style={SI} />
               </div>
+
               <div style={{ gridColumn: "1/-1", display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: tipoForm === "futuro" ? "#fff" : "#FDE047" }}>
                   {tipoForm === "futuro" ? "🍄 Qué esperan / plan" : "⭐ Highlight (Lo mejor)"}
@@ -789,24 +803,19 @@ export default function App() {
                   placeholder={tipoForm === "futuro" ? "Ej: Reservar mesa con vista..." : "Ej: Cuando nos reímos sin parar..."}
                   style={{ ...SI, minHeight: 80, resize: "vertical" }} />
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+
+              <div style={{ gridColumn: "1/-1", display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: tipoForm === "futuro" ? "#fff" : "#FDE047" }}>💛 Sentimiento</label>
-                <input value={form.sentimiento} onChange={e => setForm(p => ({ ...p, sentimiento: e.target.value }))} placeholder="Ej: Emocionada" style={SI} />
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: tipoForm === "futuro" ? "#fff" : "#FDE047" }}>✨ Emoji</label>
-                <input value={form.emoji} onChange={e => setForm(p => ({ ...p, emoji: e.target.value }))} placeholder="Ej: 🌸" style={SI} />
+                <input value={form.sentimiento} onChange={e => setForm(p => ({ ...p, sentimiento: e.target.value }))} placeholder="Ej: Emocionada, Feliz..." style={SI} />
               </div>
 
-              {/* 📸 INPUT DE IMAGEN INTEGRADO Y ESTILIZADO (Solo en modo Recuerdo) */}
+              {/* 📸 INPUT DE IMAGEN (Solo en modo Recuerdo) */}
               {tipoForm === "recuerdo" && (
                 <div style={{ gridColumn: "1/-1", display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
                   <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#FDE047" }}>
                     📸 Foto del Recuerdo
                   </label>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-
-                    {/* El input real nativo se mantiene oculto */}
                     <input
                       type="file"
                       accept="image/*"
@@ -814,35 +823,18 @@ export default function App() {
                       onChange={e => { if (e.target.files && e.target.files[0]) setFile(e.target.files[0]); }}
                       style={{ display: 'none' }}
                     />
-
-                    {/* Botón Neo-Brutalista conectado */}
                     <label
                       htmlFor="archivo-input-hidden"
+                      className="ch"
                       style={{
-                        background: "#FDE047",
-                        border: "3px solid #000",
-                        color: "#000",
-                        padding: "10px 20px",
-                        fontFamily: "'Bebas Neue', sans-serif",
-                        fontSize: 16,
-                        letterSpacing: 2,
-                        textTransform: "uppercase",
-                        cursor: "pointer",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 8,
-                        boxShadow: "4px 4px 0 #000",
-                        transition: "transform 0.1s, box-shadow 0.1s"
+                        background: "#FDE047", border: "3px solid #000", color: "#000", padding: "10px 20px",
+                        fontFamily: "'Bebas Neue', sans-serif", fontSize: 16, letterSpacing: 2, cursor: "pointer",
+                        display: "inline-flex", alignItems: "center", gap: 8, boxShadow: "4px 4px 0 #000"
                       }}
-                      onMouseDown={(e) => { e.currentTarget.style.transform = 'translate(2px, 2px)'; e.currentTarget.style.boxShadow = '2px 2px 0 #000'; }}
-                      onMouseUp={(e) => { e.currentTarget.style.transform = 'translate(0px, 0px)'; e.currentTarget.style.boxShadow = '4px 4px 0 #000'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translate(0px, 0px)'; e.currentTarget.style.boxShadow = '4px 4px 0 #000'; }}
                     >
                       <span>✨ Seleccionar Foto</span>
                     </label>
-
-                    {/* Feedback del nombre del archivo */}
-                    <span style={{ fontSize: 11, color: "#666", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}>
+                    <span style={{ fontSize: 11, color: "#aaa", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 180 }}>
                       {file ? file.name : "Ninguna foto..."}
                     </span>
                   </div>
@@ -850,17 +842,16 @@ export default function App() {
               )}
             </div>
 
-            <button onClick={submit}
+            <button onClick={submit} className="ch"
               style={{
-                background: tipoForm === "futuro" ? "#fff" : "#FDE047", border: `3px solid ${tipoForm === "futuro" ? "#fff" : "#FDE047"}`,
-                color: "#000", padding: "12px 24px", fontFamily: "'Bebas Neue'", fontSize: 20, letterSpacing: 2,
-                cursor: "pointer", width: "100%", marginTop: 20
+                background: tipoForm === "futuro" ? "#fff" : "#FDE047", border: "3px solid #000",
+                color: "#000", padding: "14px", fontFamily: "'Bebas Neue'", fontSize: 22, letterSpacing: 2,
+                cursor: "pointer", width: "100%", marginTop: 24, boxShadow: "4px 4px 0 #000"
               }}>
               {tipoForm === "futuro" ? "🍄 GUARDAR PLAN FUTURO" : "🍪 GUARDAR RECUERDO"}
             </button>
           </div>
         )}
-
         {/* RETOS */}
         {tab === "retos" && (
           <div style={{ background: "#FDE047", border: "4px solid #000", padding: 28, textAlign: "center" }}>
