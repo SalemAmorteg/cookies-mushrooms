@@ -569,23 +569,41 @@ export default function App() {
       <div style={{ background: "#FDE047", borderBottom: "4px solid #000", padding: "14px 20px", position: "sticky", top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: 920, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, width: "100%" }}>
           <div>
-            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: "#000", letterSpacing: 2, lineHeight: 1 }}>🍪 Cookies &amp; Mushrooms 🍄</div>
+            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: "#000", letterSpacing: 2, lineHeight: 1 }}>🍪 Cookies & Mushrooms 🍄</div>
             <div style={{ fontSize: 9, color: "#000", opacity: .6, letterSpacing: 3, textTransform: "uppercase", marginTop: 2 }}>Bitácora de Pareja</div>
           </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <div style={{ background: "#000", color: "#FDE047", padding: "6px 12px", fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 1 }}>
-              🍪 {citas.length}
+
+          {/* CONTADORES ESTILO PÍLDORA */}
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+
+            {/* Contador de Recuerdos (Cookies) */}
+            <div style={{
+              background: "#000", color: "#FDE047", padding: "6px 16px",
+              fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 1.5,
+              borderRadius: "24px", display: "flex", alignItems: "center", gap: 6,
+              boxShadow: "2px 2px 0 rgba(0,0,0,0.3)", border: "2px solid #000"
+            }}>
+              <span style={{ fontSize: 14 }}>🍪</span> {citas.length}
             </div>
-            <div style={{ background: "#000", color: "#fff", padding: "6px 12px", fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 1, border: "2px solid #444" }}>
-              🍄 {planes.length}
+
+            {/* Contador de Planes (Mushrooms) */}
+            <div style={{
+              background: "#000000", color: "#ffffff", padding: "6px 16px",
+              fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 1.5,
+              border: "2px solid #000", borderRadius: "24px",
+              display: "flex", alignItems: "center", gap: 6,
+              boxShadow: "2px 2px 0 rgba(0,0,0,0.3)"
+            }}>
+              <span style={{ fontSize: 14 }}>🍄</span> {planes.length}
             </div>
+
           </div>
         </div>
       </div>
 
       {/* TABS (MENÚ MÁS ACCESIBLE Y MODERNO) */}
       <div style={{ background: "#0a0a0a", padding: "16px 12px", position: "sticky", top: 65, zIndex: 90, borderBottom: "2px solid #222" }}>
-        <div style={{ maxWidth: 650, margin: "0 auto", display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
+        <div style={{ maxWidth: 650, margin: "0 auto", display: "flex", justifyContent: "center", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
           {TABS.map(([k, l]) => (
             <button key={k} onClick={() => setTab(k)}
               style={{
@@ -609,29 +627,47 @@ export default function App() {
         {/* MURO (RECUERDOS TIPO INSTAGRAM) */}
         {tab === "muro" && (
           <>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(210px,1fr))", gap: 15, marginBottom: 24 }}>
-              <div style={{ background: "#111", border: "3px solid #FDE047", padding: 14 }}>
-                <div style={{ fontFamily: "'Bebas Neue'", fontSize: 40, color: "#FDE047", lineHeight: 1 }}>{citas.length + planes.length}</div>
-                <div style={{ fontSize: 9, color: "#555", letterSpacing: 2, textTransform: "uppercase", marginTop: 4 }}>🍄 Total</div>
-              </div>
-              {Object.entries(stats).map(([cat, cnt]) => (
-                <div key={cat} style={{ background: "#111", border: "3px solid #222", padding: 14 }}>
-                  <div style={{ fontFamily: "'Bebas Neue'", fontSize: 40, color: "#FDE047", lineHeight: 1 }}>{cnt}</div>
-                  <div style={{ fontSize: 9, color: "#555", letterSpacing: 2, textTransform: "uppercase", marginTop: 4 }}>{CAT_IC[cat]} {cat}</div>
-                </div>
-              ))}
-            </div>
+            {/* BOTONES DE FILTRO ESTILO PÍLDORA (CON CONTEO INTEGRADO) */}
+            <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 10, marginBottom: 32, marginTop: 10 }}>
+              {CATS.map(cat => {
+                const isActive = filtro === cat;
+                // Calculamos el total general si es la pestaña "TODAS", si no, usamos el de la categoría
+                const isTodas = cat.toUpperCase() === "TODAS" || cat === CATS[0];
+                const count = isTodas ? (citas.length + planes.length) : (stats[cat] || 0);
 
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
-              {CATS.map(cat => (
-                <button key={cat} onClick={() => setFiltro(cat)} className={filtro === cat ? "fa" : ""}
-                  style={{
-                    background: "transparent", border: "2px solid #333", color: "#555", padding: "6px 12px",
-                    fontFamily: "'Space Mono'", fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", cursor: "pointer"
-                  }}>
-                  {CAT_IC[cat]} {cat}
-                </button>
-              ))}
+                return (
+                  <button key={cat} onClick={() => setFiltro(cat)}
+                    style={{
+                      background: isActive ? "#FDE047" : "#111",
+                      color: isActive ? "#000" : "#888",
+                      border: isActive ? "2px solid #000" : "2px solid #333",
+                      borderRadius: "24px", padding: "6px 12px 6px 16px", // Margen ajustado para la burbuja
+                      fontFamily: "'Space Mono', monospace", fontSize: 11, fontWeight: 700,
+                      letterSpacing: 1.5, textTransform: "uppercase", cursor: "pointer",
+                      boxShadow: isActive ? "3px 3px 0 #000" : "none",
+                      transition: "all 0.2s ease",
+                      display: "flex", alignItems: "center", gap: 8
+                    }}
+                    onMouseOver={e => { if (!isActive) e.currentTarget.style.background = "#1a1a1a"; }}
+                    onMouseOut={e => { if (!isActive) e.currentTarget.style.background = "#111"; }}
+                  >
+                    <span>{CAT_IC[cat]} {cat}</span>
+
+                    {/* BURBUJA CON EL NÚMERO (BADGE) */}
+                    <span style={{
+                      background: isActive ? "#000" : "#222",
+                      color: isActive ? "#FDE047" : "#888",
+                      padding: "3px 8px",
+                      borderRadius: "12px",
+                      fontSize: 10,
+                      fontWeight: 900,
+                      transition: "all 0.2s ease"
+                    }}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
             {citasF.length === 0 ? (
@@ -643,12 +679,12 @@ export default function App() {
               /* FEED VERTICAL - TIPO INSTAGRAM */
               <div style={{ display: "flex", flexDirection: "column", gap: 32, maxWidth: 480, margin: "0 auto" }}>
                 {citasF.map(c => (
-                  <div key={c.id} className="ch" style={{ background: "#FDE047", border: "4px solid #000", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                  <div key={c.id} className="ch" style={{ background: "#FDE047", border: "4px solid #000", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", borderRadius: 16 }}>
 
                     {/* Barra Superior del Post */}
                     <div style={{ background: "#000", color: "#FDE047", padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span style={{ fontFamily: "'Bebas Neue'", fontSize: 13, letterSpacing: 0.5 }}>🍪 {fmt(c.fechaRaw)}</span>
-                      <span style={{ fontSize: 9, letterSpacing: 2, textTransform: "uppercase", border: "1px solid #FDE047", padding: "2px 6px" }}>{CAT_IC[c.categoria]} {c.categoria}</span>
+                      <span style={{ fontSize: 9, letterSpacing: 2, textTransform: "uppercase", border: "1px solid #FDE047", padding: "2px 6px", borderRadius: 12 }}>{CAT_IC[c.categoria]} {c.categoria}</span>
                     </div>
 
                     {/* Espacio Multimedia (Foto) estilo Instagram */}
@@ -681,38 +717,72 @@ export default function App() {
         {/* PRÓXIMOS */}
         {tab === "proximos" && (
           <>
+            {/* PRÓXIMO PLAN (HERO CARD REDISEÑADA) */}
             {prox && (() => {
               const dias = diasRestantes(prox.fechaRaw);
               return (
-                <div style={{ background: "#FDE047", border: "4px solid #000", padding: 20, marginBottom: 24, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-                  <div className={dias !== null && dias <= 3 ? "pulse" : ""} style={{ textAlign: "center" }}>
-                    <div style={{ fontFamily: "'Bebas Neue'", fontSize: 11, letterSpacing: 3, color: "#000", textTransform: "uppercase", marginBottom: 4 }}>Próximo plan</div>
-                    <div style={{ fontFamily: "'Bebas Neue'", fontSize: dias === 0 ? 14 : 48, color: "#000", lineHeight: 1 }}>
-                      {dias === 0 ? "¡HOY! 🎉" : dias < 0 ? `Hace ${Math.abs(dias)}d` : `${dias}d`}
+                <div className={`ch ${dias !== null && dias <= 3 ? "pulse" : ""}`} 
+                  style={{ 
+                    background: "#fff", border: "4px solid #000", padding: 20, marginBottom: 32, 
+                    borderRadius: 20, display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap"
+                  }}>
+                  <div style={{ 
+                    background: "#000", color: "#fff", borderRadius: "50%", width: 80, height: 80, 
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                    fontFamily: "'Bebas Neue'", flexShrink: 0, border: "3px solid #000", textAlign: "center"
+                  }}>
+                    <div style={{ fontSize: dias === 0 ? 18 : 32, lineHeight: 1, marginTop: 4 }}>
+                      {dias === 0 ? "HOY" : Math.abs(dias)}
                     </div>
-                    {dias > 0 && <div style={{ fontSize: 9, color: "#000", opacity: .6, letterSpacing: 2, textTransform: "uppercase" }}>días restantes</div>}
+                    <div style={{ fontSize: 10, marginTop: -2 }}>
+                      {dias === 0 ? "🎉" : dias < 0 ? "DÍAS ATRÁS" : "DÍAS"}
+                    </div>
                   </div>
                   <div style={{ flex: 1, minWidth: 160 }}>
-                    <div style={{ fontFamily: "'Bebas Neue'", fontSize: 24, color: "#000", letterSpacing: 1, lineHeight: 1.1 }}>{prox.plan}</div>
-                    <div style={{ fontSize: 10, color: "#000", opacity: .6, marginTop: 4 }}>{fmt(prox.fechaRaw)} · {CAT_IC[prox.categoria]} {prox.categoria}</div>
+                    <div style={{ fontSize: 10, color: "#666", fontWeight: "bold", textTransform: "uppercase", letterSpacing: 2 }}>Próximo Plan</div>
+                    <div style={{ fontFamily: "'Bebas Neue'", fontSize: 28, color: "#000", letterSpacing: 1, lineHeight: 1.1 }}>{prox.plan}</div>
                   </div>
-                  <div style={{ fontSize: 36 }}>{prox.emoji}</div>
+                  <div style={{ fontSize: 12, color: "#444", marginTop: 4 }}>{fmt(prox.fechaRaw)} · {CAT_IC[prox.categoria]} {prox.categoria}</div>
                 </div>
               );
             })()}
 
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
-              {CATS.map(cat => (
-                <button key={cat} onClick={() => setFiltro(cat)} className={filtro === cat ? "fa" : ""}
-                  style={{
-                    background: "transparent", border: "2px solid #333", color: "#555", padding: "6px 12px",
-                    fontFamily: "'Space Mono'", fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", cursor: "pointer"
-                  }}>
-                  {CAT_IC[cat]} {cat}
-                </button>
-              ))}
+            {/* BOTONES DE FILTRO ESTILO PÍLDORA (CENTRADOS Y BLANCOS) */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 32, justifyContent: "center" }}>
+              {CATS.map(cat => {
+                const isActive = filtro === cat;
+                const isTodas = cat.toUpperCase() === "TODAS" || cat === CATS[0];
+                // Calculamos el conteo directo desde tu arreglo de planes
+                const count = isTodas ? planes.length : planes.filter(p => p.categoria === cat).length;
+                
+                return (
+                  <button key={cat} onClick={() => setFiltro(cat)} 
+                    style={{
+                      background: isActive ? "#fff" : "#111", 
+                      color: isActive ? "#000" : "#888", 
+                      border: isActive ? "2px solid #000" : "2px solid #333", 
+                      borderRadius: "24px", padding: "6px 12px 6px 16px",
+                      fontFamily: "'Space Mono', monospace", fontSize: 11, fontWeight: 700, 
+                      letterSpacing: 1.5, textTransform: "uppercase", cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      display: "flex", alignItems: "center", gap: 8
+                    }}
+                    onMouseOver={e => { if (!isActive) e.currentTarget.style.background = "#1a1a1a"; }}
+                    onMouseOut={e => { if (!isActive) e.currentTarget.style.background = "#111"; }}
+                  >
+                    <span>{CAT_IC[cat]} {cat}</span>
+                    <span style={{
+                      background: isActive ? "#000" : "#222", color: isActive ? "#fff" : "#888",
+                      padding: "3px 8px", borderRadius: "12px", fontSize: 10, fontWeight: 900
+                    }}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
+            {/* FEED VERTICAL (TIPO INSTAGRAM PARA PLANES) */}
             {planesF.length === 0 ? (
               <div style={{ textAlign: "center", padding: "60px 20px", color: "#333" }}>
                 <div style={{ fontSize: 56, marginBottom: 12 }}>🍄</div>
@@ -720,27 +790,49 @@ export default function App() {
                 <div style={{ fontSize: 11, color: "#555", marginTop: 8 }}>Ve a <strong style={{ color: "#FDE047" }}>＋ Registrar</strong> y agrega un plan futuro.</div>
               </div>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 16 }}>
+              // Contenedor principal de una sola columna centrado
+              <div style={{ display: "flex", flexDirection: "column", gap: 32, maxWidth: 480, margin: "0 auto" }}>
                 {planesF.map(p => {
-                  const dias = diasRestantes(p.fechaRaw); const esHoy = dias === 0; const esPas = dias !== null && dias < 0;
+                  const dias = diasRestantes(p.fechaRaw); 
+                  const esHoy = dias === 0; 
+                  const esPas = dias !== null && dias < 0;
+                  
                   return (
-                    <div key={p.id} className="ch" style={{ background: "#fff", border: "4px solid #000", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", height: "100%" }}>
-                      <div style={{ background: "#000", color: "#fff", padding: "8px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontFamily: "'Bebas Neue'", fontSize: 12, letterSpacing: 0.5 }}>🍄 {fmt(p.fechaRaw)}</span>
-                        <span style={{ fontSize: 9, letterSpacing: 2, textTransform: "uppercase", border: "1px solid #fff", padding: "2px 6px" }}>{CAT_IC[p.categoria]} {p.categoria}</span>
+                    <div key={p.id} className="ch" style={{ background: "#fff", border: "4px solid #000", borderRadius: 16, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                      
+                      {/* Barra Superior */}
+                      <div style={{ background: "#000", color: "#fff", padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontFamily: "'Bebas Neue'", fontSize: 14, letterSpacing: 0.5 }}>🍄 {fmt(p.fechaRaw)}</span>
+                        <span style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", border: "1px solid #fff", padding: "2px 8px", borderRadius: 12 }}>{CAT_IC[p.categoria]} {p.categoria}</span>
                       </div>
-                      <div style={{ padding: "14px 12px", display: "flex", flexDirection: "column", flexGrow: 1 }}>
-                        <div style={{ fontFamily: "'Bebas Neue'", fontSize: 22, color: "#000", lineHeight: 1.1, marginBottom: 10, letterSpacing: 1 }}>{p.plan}</div>
-                        <div style={{ fontSize: 11, color: "#000", lineHeight: 1.5, borderLeft: "3px solid #000", paddingLeft: 8, marginBottom: 12, display: "flex", alignItems: "center", flexGrow: 1 }}>{p.highlight}</div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                          <div style={{ background: esHoy ? "#FDE047" : esPas ? "#222" : "#0a0a0a", color: esHoy ? "#000" : "#FDE047", border: "2px solid #000", padding: "4px 10px", fontFamily: "'Bebas Neue'", fontSize: 14, letterSpacing: 2 }}>
+                      
+                      {/* Contenido */}
+                      <div style={{ padding: "20px 16px", display: "flex", flexDirection: "column" }}>
+                        <div style={{ fontFamily: "'Bebas Neue'", fontSize: 26, color: "#000", lineHeight: 1.1, marginBottom: 12, letterSpacing: 1 }}>{p.plan}</div>
+                        <div style={{ fontSize: 13, color: "#222", lineHeight: 1.5, borderLeft: "4px solid #000", paddingLeft: 12, marginBottom: 20 }}>{p.highlight}</div>
+                        
+                        {/* Status / Emoji */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ fontSize: 24 }}>{p.emoji}</span>
+                            <span style={{ fontSize: 12, color: "#444", fontStyle: "italic", fontWeight: 600 }}>{p.sentimiento}</span>
+                          </div>
+                          <div style={{ 
+                            background: esHoy ? "#FDE047" : esPas ? "#eee" : "#000", 
+                            color: esHoy ? "#000" : esPas ? "#666" : "#fff", 
+                            border: "2px solid #000", padding: "6px 12px", 
+                            fontFamily: "'Bebas Neue'", fontSize: 16, letterSpacing: 2, borderRadius: 12 
+                          }}>
                             {esHoy ? "¡HOY! 🎉" : esPas ? `Hace ${Math.abs(dias)}d` : `Faltan ${dias} días`}
                           </div>
-                          <span style={{ fontSize: 10, color: "#000", opacity: .90, fontStyle: "italic" }}>{p.sentimiento}</span>
                         </div>
-                        <div style={{ marginTop: "auto" }}><CardActions onEdit={() => setEditItem(p)} onDelete={() => setDeleteItem(p)} /></div>
+                        
+                        {/* Separador sutil antes de los botones de acción */}
+                        <div style={{ borderTop: "2px dashed #ddd", paddingTop: 16 }}>
+                          <CardActions onEdit={() => setEditItem(p)} onDelete={() => setDeleteItem(p)} />
+                        </div>
                       </div>
-                      <div style={{ position: "absolute", bottom: -8, right: -4, fontSize: 52, opacity: .05, pointerEvents: "none" }}>🍄</div>
+                      
                     </div>
                   );
                 })}
