@@ -119,7 +119,7 @@ function EditModal({ item, onSave, onClose }) {
   }
 
   return (
-    
+
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
       <div style={{ background: "#111", border: `4px solid ${ac}`, padding: 28, width: "100%", maxWidth: 520, maxHeight: "90vh", overflowY: "auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
@@ -561,6 +561,19 @@ export default function App() {
         input:focus,select:focus,textarea:focus{outline:none;border-color:#FDE047!important;}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
         .pulse{animation:pulse 2s infinite;}
+        
+        /* ESTILOS RESPONSIVE PARA MÓVILES */
+        .tabs-container::-webkit-scrollbar { display: none; }
+        .tabs-container { -ms-overflow-style: none; scrollbar-width: none; }
+
+        @media (max-width: 650px) {
+          .app-header { flex-direction: column !important; gap: 12px !important; padding: 12px !important; }
+          .header-title-box { text-align: center; }
+          .header-title-text { font-size: 24px !important; }
+          .header-counters { justify-content: center !important; width: 100%; }
+          .hero-card { flex-direction: column !important; text-align: center; gap: 12px !important; padding: 16px !important; }
+          .hero-text-box { min-width: 100% !important; }
+        }
       `}</style>
 
       {editItem && <EditModal item={editItem} onSave={saveEdit} onClose={() => setEditItem(null)} />}
@@ -568,16 +581,14 @@ export default function App() {
 
       {/* HEADER */}
       <div style={{ background: "#FDE047", borderBottom: "4px solid #000", padding: "14px 20px", position: "sticky", top: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: 920, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, width: "100%" }}>
-          <div>
-            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: "#000", letterSpacing: 2, lineHeight: 1 }}>🍪 Cookies & Mushrooms 🍄</div>
+        <div className="app-header" style={{ maxWidth: 920, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, width: "100%" }}>
+          <div className="header-title-box">
+            <div className="header-title-text" style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: "#000", letterSpacing: 2, lineHeight: 1 }}>🍪 Cookies & Mushrooms 🍄</div>
             <div style={{ fontSize: 9, color: "#000", opacity: .6, letterSpacing: 3, textTransform: "uppercase", marginTop: 2 }}>Bitácora de Pareja</div>
           </div>
 
           {/* CONTADORES ESTILO PÍLDORA */}
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-
-            {/* Contador de Recuerdos (Cookies) */}
+          <div className="header-counters" style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <div style={{
               background: "#000", color: "#FDE047", padding: "6px 16px",
               fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 1.5,
@@ -586,8 +597,6 @@ export default function App() {
             }}>
               <span style={{ fontSize: 14 }}>🍪</span> {citas.length}
             </div>
-
-            {/* Contador de Planes (Mushrooms) */}
             <div style={{
               background: "#000000", color: "#ffffff", padding: "6px 16px",
               fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 1.5,
@@ -597,14 +606,13 @@ export default function App() {
             }}>
               <span style={{ fontSize: 14 }}>🍄</span> {planes.length}
             </div>
-
           </div>
         </div>
       </div>
 
       {/* TABS (MENÚ MÁS ACCESIBLE Y MODERNO) */}
       <div style={{ background: "#0a0a0a", padding: "16px 12px", position: "sticky", top: 65, zIndex: 90, borderBottom: "2px solid #222" }}>
-        <div style={{ maxWidth: 650, margin: "0 auto", display: "flex", justifyContent: "center", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
+        <div className="tabs-container" style={{ maxWidth: 650, margin: "0 auto", display: "flex", justifyContent: "center", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
           {TABS.map(([k, l]) => (
             <button key={k} onClick={() => setTab(k)}
               style={{
@@ -722,13 +730,13 @@ export default function App() {
             {prox && (() => {
               const dias = diasRestantes(prox.fechaRaw);
               return (
-                <div className={`ch ${dias !== null && dias <= 3 ? "pulse" : ""}`} 
-                  style={{ 
-                    background: "#fff", border: "4px solid #000", padding: 20, marginBottom: 32, 
+                <div className={`ch hero-card ${dias !== null && dias <= 3 ? "pulse" : ""}`}
+                  style={{
+                    background: "#fff", border: "4px solid #000", padding: 20, marginBottom: 32,
                     borderRadius: 20, display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap"
                   }}>
-                  <div style={{ 
-                    background: "#000", color: "#fff", borderRadius: "50%", width: 80, height: 80, 
+                  <div style={{
+                    background: "#000", color: "#fff", borderRadius: "50%", width: 80, height: 80,
                     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
                     fontFamily: "'Bebas Neue'", flexShrink: 0, border: "3px solid #000", textAlign: "center"
                   }}>
@@ -739,7 +747,7 @@ export default function App() {
                       {dias === 0 ? "🎉" : dias < 0 ? "DÍAS ATRÁS" : "DÍAS"}
                     </div>
                   </div>
-                  <div style={{ flex: 1, minWidth: 160 }}>
+                  <div className="hero-text-box" style={{ flex: 1, minWidth: 160 }}>
                     <div style={{ fontSize: 10, color: "#666", fontWeight: "bold", textTransform: "uppercase", letterSpacing: 2 }}>Próximo Plan</div>
                     <div style={{ fontFamily: "'Bebas Neue'", fontSize: 28, color: "#000", letterSpacing: 1, lineHeight: 1.1 }}>{prox.plan}</div>
                   </div>
@@ -755,15 +763,15 @@ export default function App() {
                 const isTodas = cat.toUpperCase() === "TODAS" || cat === CATS[0];
                 // Calculamos el conteo directo desde tu arreglo de planes
                 const count = isTodas ? planes.length : planes.filter(p => p.categoria === cat).length;
-                
+
                 return (
-                  <button key={cat} onClick={() => setFiltro(cat)} 
+                  <button key={cat} onClick={() => setFiltro(cat)}
                     style={{
-                      background: isActive ? "#fff" : "#111", 
-                      color: isActive ? "#000" : "#888", 
-                      border: isActive ? "2px solid #000" : "2px solid #333", 
+                      background: isActive ? "#fff" : "#111",
+                      color: isActive ? "#000" : "#888",
+                      border: isActive ? "2px solid #000" : "2px solid #333",
                       borderRadius: "24px", padding: "6px 12px 6px 16px",
-                      fontFamily: "'Space Mono', monospace", fontSize: 11, fontWeight: 700, 
+                      fontFamily: "'Space Mono', monospace", fontSize: 11, fontWeight: 700,
                       letterSpacing: 1.5, textTransform: "uppercase", cursor: "pointer",
                       transition: "all 0.2s ease",
                       display: "flex", alignItems: "center", gap: 8
@@ -794,46 +802,46 @@ export default function App() {
               // Contenedor principal de una sola columna centrado
               <div style={{ display: "flex", flexDirection: "column", gap: 32, maxWidth: 480, margin: "0 auto" }}>
                 {planesF.map(p => {
-                  const dias = diasRestantes(p.fechaRaw); 
-                  const esHoy = dias === 0; 
+                  const dias = diasRestantes(p.fechaRaw);
+                  const esHoy = dias === 0;
                   const esPas = dias !== null && dias < 0;
-                  
+
                   return (
                     <div key={p.id} className="ch" style={{ background: "#fff", border: "4px solid #000", borderRadius: 16, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                      
+
                       {/* Barra Superior */}
                       <div style={{ background: "#000", color: "#fff", padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <span style={{ fontFamily: "'Bebas Neue'", fontSize: 14, letterSpacing: 0.5 }}>🍄 {fmt(p.fechaRaw)}</span>
                         <span style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", border: "1px solid #fff", padding: "2px 8px", borderRadius: 12 }}>{CAT_IC[p.categoria]} {p.categoria}</span>
                       </div>
-                      
+
                       {/* Contenido */}
                       <div style={{ padding: "20px 16px", display: "flex", flexDirection: "column" }}>
                         <div style={{ fontFamily: "'Bebas Neue'", fontSize: 26, color: "#000", lineHeight: 1.1, marginBottom: 12, letterSpacing: 1 }}>{p.plan}</div>
                         <div style={{ fontSize: 13, color: "#222", lineHeight: 1.5, borderLeft: "4px solid #000", paddingLeft: 12, marginBottom: 20 }}>{p.highlight}</div>
-                        
+
                         {/* Status / Emoji */}
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                             <span style={{ fontSize: 24 }}>{p.emoji}</span>
                             <span style={{ fontSize: 12, color: "#444", fontStyle: "italic", fontWeight: 600 }}>{p.sentimiento}</span>
                           </div>
-                          <div style={{ 
-                            background: esHoy ? "#FDE047" : esPas ? "#eee" : "#000", 
-                            color: esHoy ? "#000" : esPas ? "#666" : "#fff", 
-                            border: "2px solid #000", padding: "6px 12px", 
-                            fontFamily: "'Bebas Neue'", fontSize: 16, letterSpacing: 2, borderRadius: 12 
+                          <div style={{
+                            background: esHoy ? "#FDE047" : esPas ? "#eee" : "#000",
+                            color: esHoy ? "#000" : esPas ? "#666" : "#fff",
+                            border: "2px solid #000", padding: "6px 12px",
+                            fontFamily: "'Bebas Neue'", fontSize: 16, letterSpacing: 2, borderRadius: 12
                           }}>
                             {esHoy ? "¡HOY! 🎉" : esPas ? `Hace ${Math.abs(dias)}d` : `Faltan ${dias} días`}
                           </div>
                         </div>
-                        
+
                         {/* Separador sutil antes de los botones de acción */}
                         <div style={{ borderTop: "2px dashed #ddd", paddingTop: 16 }}>
                           <CardActions onEdit={() => setEditItem(p)} onDelete={() => setDeleteItem(p)} />
                         </div>
                       </div>
-                      
+
                     </div>
                   );
                 })}
